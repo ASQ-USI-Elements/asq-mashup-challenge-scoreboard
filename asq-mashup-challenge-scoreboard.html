@@ -66,7 +66,7 @@
       </template>
     </div> -->
 
-    <sortable-table id="scoreboard" data="{{sortableTableQuestions}}" rowtemplate="rowTemplate">
+    <sortable-table id="scoreboard" columns='{{sortableTableColumns}}' data="{{sortableTableQuestions}}" rowtemplate="rowTemplate">
       <template id="rowTemplate">
         <td class="name-cell">{{record.fields.Name.value}}</td>
         <td class="rank-cell" style="position:relative;">{{record.fields.Rank.value}}
@@ -80,7 +80,7 @@
                 N/A
               </template>
               <template if="{{record.row[f] >= 0}}">
-                <asq-rating-item rating="{{record.row[f]}}" disabled></asq-rating-item>
+                {{record.row[f]}}
               </template>
             </td>
           </template>
@@ -116,6 +116,7 @@
 
       created: function(){
         this.questions = [];
+        this.sortableTableColumns = ["Name", "Rank"];
         this.sortableTableQuestions = [];
         this.ratingFieldNames = [];
 
@@ -153,10 +154,18 @@
           return;
         }
 
+        this.sortableTableColumns = ["Name", "Rank"];
+
         // take the rating fields of the first question as rating fields Names
         this.ratingFieldNames = this.questions[0].data.ratingItems.map(function(rItem){
+           this.sortableTableColumns.push( rItem.html.replace(/^\s*Mashup\s+/i, ''));
+
           return rItem.html;
-        });
+        }.bind(this));
+
+        this.sortableTableColumns.push("Total")
+
+
         
         this.$.scoreboard.ratingFieldNames = this.ratingFieldNames
       },
