@@ -68,19 +68,29 @@
 
     <sortable-table id="scoreboard" data="{{sortableTableQuestions}}" rowtemplate="rowTemplate">
       <template id="rowTemplate">
-        <td>{{record.fields.Name.value}}</td>
-        <td style="position:relative;">{{record.fields.Rank.value}}
+        <td class="name-cell">{{record.fields.Name.value}}</td>
+        <td class="rank-cell" style="position:relative;">{{record.fields.Rank.value}}
           <template if="{{record.fields.Rank.value == 1}}">
-            <img src="gold-medal.png" style="height:30px; position:absolute;left:15px;" alt="">
+            <img src="gold-medal.png" style="height:30px; position:absolute;top:calc(50% -30px);left:0" alt="">
           </template>
         </td>
           <template repeat="{{ f in ratingFieldNames }}">
-            <td>
-              <asq-rating-item rating="{{record.row[f]}}" disabled></asq-rating-item>
+            <td class="rating-cell">
+              <template if="{{!record.row[f]}}">
+                N/A
+              </template>
+              <template if="{{record.row[f] >= 0}}">
+                <asq-rating-item rating="{{record.row[f]}}" disabled></asq-rating-item>
+              </template>
             </td>
           </template>
-          <td>
-            <asq-rating-item rating="{{record.fields.Total.value}}" disabled></asq-rating-item>
+          <td class="total-cell">
+            <template if="{{!record.fields.Total.value}}">
+              N/A
+            </template>
+            <template if="{{record.fields.Total.value >= 0}}">
+              <asq-rating-item rating="{{record.fields.Total.value}}" disabled></asq-rating-item>
+            </template>
           </td>
       </template>
     </sortable-table>
