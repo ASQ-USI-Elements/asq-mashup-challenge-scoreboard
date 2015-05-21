@@ -1,0 +1,184 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../asq-base/asq-base.html">
+<link rel="import" href="../asq-rating/asq-rating-item.html">
+<link rel="import" href="../sortable-table/sortable-table.html">
+
+
+<!--
+`asq-mashup-challenge-scoreboard` is the scoreboard for ICWE2015 Rapid Mashup Challenge.
+
+##### Example
+    <asq-mashup-challenge-scoreboard questions="{{questions}}">
+    </asq-mashup-challenge-scoreboard>
+
+@element asq-mashup-challenge-scoreboard
+@group ASQ Elements
+@blurb `asq-mashup-challenge-scoreboard` is the scoreboard for ICWE2015 Rapid Mashup Challenge.
+@homepage http://github.com/ASQ_USI/asq-mashup-challenge-scoreboard
+-->
+<polymer-element name="asq-mashup-challenge-scoreboard" attributes="questions">
+  <template>
+    <style>
+      :host{
+        display: block;
+      }
+
+      sortable-table::shadow tr,
+      sortable-table::shadow td{
+        height: 30px;
+        line-height: 30px;
+      }
+
+      sortable-table::shadow th{
+        cursor: pointer;
+      }
+
+      sortable-table::shadow .sorted-column-asc:after{
+        content: '▲';
+      }
+
+      sortable-table::shadow .sorted-column-desc:after{
+        content: '▼';
+      }
+    </style>
+
+    <!-- (for now) Keep same when either viewer or presenter -->
+    <!-- <div id="scoreboard" vertical layout> -->
+
+      <!-- column names -->
+    <!--   <div layout horizontal>
+        <div class="header" flex>Name</div> -->
+        <!-- rating column names same as the first question -->
+<!--         <template repeat="{{ rItem in questions[0].data.ratingItems }}">
+          <div class="header" flex>{{rItem.html}}</div>
+        </template>
+         <div class="header" flex>Total</div>
+      </div>
+
+      <template repeat="{{ question in questions }}">
+      <div layout horizontal>
+        <div class="cell" flex>{{question.data.stem}}</div>
+        <template repeat="{{ rItem in question.data.ratingItems }}">
+          <asq-rating-item class="cell" flex rating="{{rItem.rating}}" disabled></asq-rating-item>
+        </template>
+        <asq-rating-item class="cell" flex rating="{{question.data.total}}" disabled></asq-rating-item>
+        </div>
+      </template>
+    </div> -->
+
+    <sortable-table id="scoreboard" data="{{sortableTableQuestions}}" rowtemplate="rowTemplate">
+      <template id="rowTemplate">
+        <td>{{record.fields.Name.value}}</td>
+        <td style="position:relative;">{{record.fields.Rank.value}}
+          <template if="{{record.fields.Rank.value == 1}}">
+            <img src="gold-medal.png" style="height:30px; position:absolute;left:15px;" alt="">
+          </template>
+        </td>
+          <template repeat="{{ f in ratingFieldNames }}">
+            <td>
+              <asq-rating-item rating="{{record.row[f]}}" disabled></asq-rating-item>
+            </td>
+          </template>
+          <td>
+            <asq-rating-item rating="{{record.fields.Total.value}}" disabled></asq-rating-item>
+          </td>
+      </template>
+    </sortable-table>
+  </template>
+
+  <script>
+  (function() {
+
+    function roundToTwoDecimals(val){
+      // round to 2 decimals
+      // Note the plus sign that drops any "extra" zeroes at the end.
+      // It changes the result (which is a string) into a number again (think "0 + foo"),
+      // which means that it uses only as many digits as necessary.
+      //from http://stackoverflow.com/questions/11832914/round-to-at-most-2-decimal-places-in-javascript
+      return  +val.toFixed(2);
+    }
+
+    var p = {
+
+      domReady: function(){
+       this.$.scoreboard.ratingFieldNames = this.ratingFieldNames
+      },
+
+      created: function(){
+        this.questions = [];
+        this.sortableTableQuestions = [];
+        this.ratingFieldNames = [];
+
+        document.addEventListener('asq-ready', function(evt){
+          try{
+            this.subscribeToEvents(evt.detail.asqEventBus)
+          }catch(err){
+            console.debug('failed to subscribeToEvents');
+          }
+        }.bind(this));
+      },
+
+      onQuestionType: function(evt){
+        if(evt && evt.questionType && evt.questionType == 'asq-mashup-challenge-scoreboard'){
+          if(evt.type == "scoreboard"){
+            this.onScoreboard(evt)
+          }
+        }
+      },
+
+      questionsChanged: function(){
+        this.sortableTableQuestions = this.questions.map(function(q){
+          var entry = {};
+          entry["Name"] = q.data.stem;
+          entry["Rank"] = q.data.rank;
+          q.data.ratingItems.forEach(function(rItem){
+            entry[rItem.html] = rItem.rating;
+          })
+           
+          entry["Total"] = q.data.total;
+          return entry;
+        });
+
+        if(this.questions.length < 1  || !this.questions[0].data.ratingItems){
+          return;
+        }
+
+        // take the rating fields of the first question as rating fields Names
+        this.ratingFieldNames = this.questions[0].data.ratingItems.map(function(rItem){
+          return rItem.html;
+        });
+        
+        this.$.scoreboard.ratingFieldNames = this.ratingFieldNames
+      },
+
+      onScoreboard: function(evt){        
+        //round numbers to two decimals
+        for (var i=0, l= evt.questions.length; i<l; i++){
+          var question = evt.questions[i];
+          if(! question.data.total) continue;
+          
+          question.data.total = roundToTwoDecimals(question.data.total);
+          question.data.ratingItems.forEach(function(rItem){
+            rItem.rating = roundToTwoDecimals(rItem.rating);
+          });
+        }
+        this.questions = evt.questions;
+      },
+
+      /**
+       * This question type is interested in  `asq:question_type`, which is emitted 
+       * when answer is submitted successfully.
+       *
+       */
+      subscribeToEvents: function(eventBus){
+        eventBus.on('asq:question_type', this.onQuestionType.bind(this));
+      }
+
+    }
+
+    ASQ.asqify(p);
+    Polymer('asq-mashup-challenge-scoreboard', p);
+
+  })();
+  </script>
+</polymer-element>
