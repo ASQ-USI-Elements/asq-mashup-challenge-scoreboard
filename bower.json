@@ -6,7 +6,7 @@
     "Vasileios Triglianos <triglian@gmail.com>",
     "Zhenfei Nie <zhenfei.nie@gmail.com>"
   ],
-  "ignore":[ "lib"],
+  "ignore":[ "index.js", "package.json", "lib"],
   "description": "ASQ Scoreboard element for the 2015 Rapid Mashup Challenge",
   "keywords": [
     "ASQ"
