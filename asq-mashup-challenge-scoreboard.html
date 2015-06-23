@@ -74,6 +74,14 @@
             <img src="gold-medal.png" style="height:30px; position:absolute;top:calc(50% -30px);left:0" alt="">
           </template>
         </td>
+        <td class="vote-num-cell">
+          <template if="{{!record.fields.Votes.value}}">
+            N/A
+          </template>
+          <template if="{{record.fields.Votes.value >= 0}}">
+            {{record.fields.Votes.value}}
+          </template>
+        </td>
           <template repeat="{{ f in ratingFieldNames }}">
             <td class="rating-cell">
               <template if="{{!record.row[f]}}">
@@ -116,7 +124,7 @@
 
       created: function(){
         this.questions = [];
-        this.sortableTableColumns = ["Name", "Rank"];
+        this.sortableTableColumns = ["Name", "Rank", "Votes"];
         this.sortableTableQuestions = [];
         this.ratingFieldNames = [];
 
@@ -142,6 +150,7 @@
           var entry = {};
           entry["Name"] = q.data.stem;
           entry["Rank"] = q.data.rank;
+          entry["Votes"] = parseInt(q.data.numVotes);
           q.data.ratingItems.forEach(function(rItem){
             entry[rItem.html] = rItem.rating;
           })
@@ -154,7 +163,7 @@
           return;
         }
 
-        this.sortableTableColumns = ["Name", "Rank"];
+        this.sortableTableColumns = ["Name", "Rank", "Votes"];
 
         // take the rating fields of the first question as rating fields Names
         this.ratingFieldNames = this.questions[0].data.ratingItems.map(function(rItem){
