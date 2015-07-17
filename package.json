@@ -3,23 +3,23 @@
   "version": "0.0.0",
   "description": "Scoreboard element for the 2015 Rapid Mashup Challenge",
   "author": "Vassilis Triglianos <triglian@gmail.com>",
-  "homepage": "https://github.com/ASQ-USI/asq-mashup-challenge-scoreboard",
+  "homepage": "https://github.com/ASQ-USI-Elements/asq-mashup-challenge-scoreboard",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:ASQ-USI/asq-mashup-challenge-scoreboard.git"
+    "url": "git@github.com:ASQ-USI-Elements/asq-mashup-challenge-scoreboard.git"
   },
   "keywords": [
     "node.js"
   ],
   "bugs": {
-    "url": "https://github.com/ASQ-USI/asq-mashup-challenge-scoreboard/issues"
+    "url": "https://github.com/ASQ-USI-Elements/asq-mashup-challenge-scoreboard/issues"
   },
   "dependencies": {
-    "asq-plugin": "ASQ-USI/asq-plugin",
+    "asq-plugin": "ASQ-USI-Elements/asq-plugin",
     "bluebird": "^2.8.2",
     "cheerio": "^0.18.0",
     "lodash": "^3.7.0",
