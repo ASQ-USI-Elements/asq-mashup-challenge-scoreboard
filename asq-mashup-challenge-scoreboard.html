@@ -1,7 +1,7 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../asq-base/asq-base.html">
-<link rel="import" href="../asq-rating/asq-rating-item.html">
-<link rel="import" href="../sortable-table/sortable-table.html">
+<link rel="import" href="../asq-rating-q/asq-rating-item.html">
+<link rel="import" href="../paper-datatable/paper-datatable.html">
 
 
 <!--
@@ -13,200 +13,158 @@
 
 @element asq-mashup-challenge-scoreboard
 @group ASQ Elements
-@blurb `asq-mashup-challenge-scoreboard` is the scoreboard for ICWE2015 Rapid Mashup Challenge.
+@blurb `asq-mashup-challenge-scoreboard` is the scoreboard for ICWE2016 Rapid Mashup Challenge.
 @homepage http://github.com/ASQ_USI/asq-mashup-challenge-scoreboard
 -->
-<polymer-element name="asq-mashup-challenge-scoreboard" attributes="questions">
-  <template>
-    <style>
+
+<dom-module id="asq-mashup-challenge-scoreboard">
+  <style>
       :host{
         display: block;
       }
-
-      sortable-table::shadow tr,
-      sortable-table::shadow td{
-        height: 30px;
-        line-height: 30px;
-      }
-
-      sortable-table::shadow th{
-        cursor: pointer;
-      }
-
-      sortable-table::shadow .sorted-column-asc:after{
-        content: '▲';
-      }
-
-      sortable-table::shadow .sorted-column-desc:after{
-        content: '▼';
-      }
     </style>
+  <template>
 
     <!-- (for now) Keep same when either viewer or presenter -->
-    <!-- <div id="scoreboard" vertical layout> -->
 
-      <!-- column names -->
-    <!--   <div layout horizontal>
-        <div class="header" flex>Name</div> -->
-        <!-- rating column names same as the first question -->
-<!--         <template repeat="{{ rItem in questions[0].data.ratingItems }}">
-          <div class="header" flex>{{rItem.html}}</div>
-        </template>
-         <div class="header" flex>Total</div>
-      </div>
-
-      <template repeat="{{ question in questions }}">
-      <div layout horizontal>
-        <div class="cell" flex>{{question.data.stem}}</div>
-        <template repeat="{{ rItem in question.data.ratingItems }}">
-          <asq-rating-item class="cell" flex rating="{{rItem.rating}}" disabled></asq-rating-item>
-        </template>
-        <asq-rating-item class="cell" flex rating="{{question.data.total}}" disabled></asq-rating-item>
-        </div>
+    <paper-datatable id="scoreboard" data="[[sortableTableQuestions]]" multi-selection>
+      <paper-datatable-column header="Name" property="name" sortable></paper-datatable-column>
+      <paper-datatable-column header="Rank" property="rank" sortable></paper-datatable-column>
+      <paper-datatable-column header="Votes" property="votes" sortable></paper-datatable-column>
+      <template is="dom-repeat" items="{{sortableTableColumns}}">
+        <paper-datatable-column header="{{item}}" property="{{item}}" sortable>
+        </paper-datatable-column>
       </template>
-    </div> -->
-
-    <sortable-table id="scoreboard" columns='{{sortableTableColumns}}' data="{{sortableTableQuestions}}" rowtemplate="rowTemplate">
-      <template id="rowTemplate">
-        <td class="name-cell">{{record.fields.Name.value}}</td>
-        <td class="rank-cell" style="position:relative;">{{record.fields.Rank.value}}
-          <template if="{{record.fields.Rank.value == 1}}">
-            <img src="gold-medal.png" style="height:30px; position:absolute;top:calc(50% -30px);left:0" alt="">
-          </template>
-        </td>
-        <td class="vote-num-cell">
-          <template if="{{!record.fields.Votes.value}}">
+      <paper-datatable-column header="Total" property="total" sortable>
+        <template>
+          <template is="dom-if" if="{{!_hasPositiveTotal(value)}}">
             N/A
           </template>
-          <template if="{{record.fields.Votes.value >= 0}}">
-            {{record.fields.Votes.value}}
+          <template is="dom-if" if="{{_hasPositiveTotal(value)}">
+            <asq-rating-item rating="{{value}}" disabled></asq-rating-item>
           </template>
-        </td>
-          <template repeat="{{ f in ratingFieldNames }}">
-            <td class="rating-cell">
-              <template if="{{!record.row[f]}}">
-                N/A
-              </template>
-              <template if="{{record.row[f] >= 0}}">
-                {{record.row[f]}}
-              </template>
-            </td>
-          </template>
-          <td class="total-cell">
-            <template if="{{!record.fields.Total.value}}">
-              N/A
-            </template>
-            <template if="{{record.fields.Total.value >= 0}}">
-              <asq-rating-item rating="{{record.fields.Total.value}}" disabled></asq-rating-item>
-            </template>
-          </td>
-      </template>
-    </sortable-table>
+        </template>
+      </paper-datatable-column>
+    </paper-datatable>
+
   </template>
-
   <script>
-  (function() {
+    (function () {
 
-    function roundToTwoDecimals(val){
-      // round to 2 decimals
-      // Note the plus sign that drops any "extra" zeroes at the end.
-      // It changes the result (which is a string) into a number again (think "0 + foo"),
-      // which means that it uses only as many digits as necessary.
-      //from http://stackoverflow.com/questions/11832914/round-to-at-most-2-decimal-places-in-javascript
-      return  +val.toFixed(2);
-    }
-
-    var p = {
-
-      domReady: function(){
-       this.$.scoreboard.ratingFieldNames = this.ratingFieldNames
-      },
-
-      created: function(){
-        this.questions = [];
-        this.sortableTableColumns = ["Name", "Rank", "Votes"];
-        this.sortableTableQuestions = [];
-        this.ratingFieldNames = [];
-
-        document.addEventListener('asq-ready', function(evt){
-          try{
-            this.subscribeToEvents(evt.detail.asqEventBus)
-          }catch(err){
-            console.debug('failed to subscribeToEvents');
-          }
-        }.bind(this));
-      },
-
-      onQuestionType: function(evt){
-        if(evt && evt.questionType && evt.questionType == 'asq-mashup-challenge-scoreboard'){
-          if(evt.type == "scoreboard"){
-            this.onScoreboard(evt)
-          }
-        }
-      },
-
-      questionsChanged: function(){
-        this.sortableTableQuestions = this.questions.map(function(q){
-          var entry = {};
-          entry["Name"] = q.data.stem;
-          entry["Rank"] = q.data.rank;
-          entry["Votes"] = parseInt(q.data.numVotes);
-          q.data.ratingItems.forEach(function(rItem){
-            entry[rItem.html] = rItem.rating;
-          })
-           
-          entry["Total"] = q.data.total;
-          return entry;
-        });
-
-        if(this.questions.length < 1  || !this.questions[0].data.ratingItems){
-          return;
-        }
-
-        this.sortableTableColumns = ["Name", "Rank", "Votes"];
-
-        // take the rating fields of the first question as rating fields Names
-        this.ratingFieldNames = this.questions[0].data.ratingItems.map(function(rItem){
-           this.sortableTableColumns.push( rItem.html.replace(/^\s*Mashup\s+/i, ''));
-
-          return rItem.html;
-        }.bind(this));
-
-        this.sortableTableColumns.push("Total")
-
-
-        
-        this.$.scoreboard.ratingFieldNames = this.ratingFieldNames
-      },
-
-      onScoreboard: function(evt){        
-        //round numbers to two decimals
-        for (var i=0, l= evt.questions.length; i<l; i++){
-          var question = evt.questions[i];
-          if(! question.data.total) continue;
-          
-          question.data.total = roundToTwoDecimals(question.data.total);
-          question.data.ratingItems.forEach(function(rItem){
-            rItem.rating = roundToTwoDecimals(rItem.rating);
-          });
-        }
-        this.questions = evt.questions;
-      },
-
-      /**
-       * This question type is interested in  `asq:question_type`, which is emitted 
-       * when answer is submitted successfully.
-       *
-       */
-      subscribeToEvents: function(eventBus){
-        eventBus.on('asq:question_type', this.onQuestionType.bind(this));
+      function roundToTwoDecimals(val) {
+        // round to 2 decimals
+        // Note the plus sign that drops any "extra" zeroes at the end.
+        // It changes the result (which is a string) into a number again (think "0 + foo"),
+        // which means that it uses only as many digits as necessary.
+        //from http://stackoverflow.com/questions/11832914/round-to-at-most-2-decimal-places-in-javascript
+        return +val.toFixed(2);
       }
 
-    }
+      Polymer({
+        is: 'asq-mashup-challenge-scoreboard',
 
-    ASQ.asqify(p);
-    Polymer('asq-mashup-challenge-scoreboard', p);
+        behaviors: [ASQ.asqElementBehavior],
 
-  })();
+        properties: {
+          questions: {
+            type: Array,
+            value: function(){return []; },
+            notify: true,
+            observer: '_questionsChanged'
+          },
+
+          sortableTableColumns: {
+            type: Array,
+            value: function(){return []; },
+            notify: true,
+          },
+
+          sortableTableQuestions: {
+            type: Array,
+            value: function(){return []; },
+            notify: true,
+          }
+        },
+
+        created: function () {
+          document.addEventListener('asq-ready', function (evt) {
+            try {
+              this.subscribeToEvents(evt.detail.asqEventBus);
+            } catch (err) {
+              console.debug('failed to subscribeToEvents');
+            }
+          }.bind(this));
+        },
+
+        onQuestionType: function (evt) {
+          if (evt && evt.questionType && evt.questionType == 'asq-mashup-challenge-scoreboard') {
+            if (evt.type == 'scoreboard') {
+              this.onScoreboard(evt);
+            }
+          }
+        },
+
+        _hasPositiveTotal : function(val){
+          return val >= 0;
+        },
+
+        insertColumn: function(){
+          var column = document.createElement('paper-datatable-column');
+          column.header = 'Fat (dyn)';
+          column.property = 'fat';
+          column.type = 'number';
+          column.align = 'right';
+          column.formatValue = app.toFixedOne;
+          var columns = Polymer.dom(document).querySelectorAll('paper-datatable-column');
+          columns[3].parentNode.insertBefore(column, columns[3]);
+        },
+
+        _questionsChanged: function () {
+          this.sortableTableQuestions = this.questions.map(function (q) {
+            var entry = {};
+            entry.name = q.data.stem;
+            entry.rank = q.data.rank;
+            entry.votes = parseInt(q.data.numVotes);
+            q.data.ratingItems.forEach(function (rItem) {
+              entry[rItem.html] = rItem.rating;
+            });
+            entry.total = q.data.total;
+            return entry;
+          });
+          if (this.questions.length < 1 || !this.questions[0].data.ratingItems) {
+            return;
+          }
+          // take the rating fields of the first question as rating fields Names
+          var riColNames = this.questions[0].data.ratingItems.map(function (rItem) {
+            return rItem.html.replace(/^\s*Mashup\s+/i, '')
+          });
+          this.sortableTableColumns = riColNames;
+        },
+
+        onScoreboard: function (evt) {
+          //round numbers to two decimals
+          for (var i = 0, l = evt.questions.length; i < l; i++) {
+            var question = evt.questions[i];
+            if (!question.data.total)
+              continue;
+            question.data.total = roundToTwoDecimals(question.data.total);
+            question.data.ratingItems.forEach(function (rItem) {
+              rItem.rating = roundToTwoDecimals(rItem.rating);
+            });
+          }
+          this.questions = evt.questions;
+        },
+
+        /**
+         * This question type is interested in  `asq:question_type`, which is emitted 
+         * when answer is submitted successfully.
+         *
+         */
+        subscribeToEvents: function (eventBus) {
+          eventBus.on('asq:question_type', this.onQuestionType.bind(this));
+        }
+      }
+);
+    }());
   </script>
-</polymer-element>
+</dom-module>
