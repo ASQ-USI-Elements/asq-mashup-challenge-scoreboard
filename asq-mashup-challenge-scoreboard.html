@@ -21,6 +21,9 @@
   <style>
       :host{
         display: block;
+        --paper-datatable-cell:{
+          padding: 6px 4px;
+        };
       }
     </style>
   <template>
@@ -28,14 +31,14 @@
     <!-- (for now) Keep same when either viewer or presenter -->
 
     <paper-datatable id="scoreboard" data="[[sortableTableQuestions]]" multi-selection>
-      <paper-datatable-column header="Name" property="name" sortable></paper-datatable-column>
-      <paper-datatable-column header="Rank" property="rank" sortable></paper-datatable-column>
-      <paper-datatable-column header="Votes" property="votes" sortable></paper-datatable-column>
+      <paper-datatable-column style="max-width: 100px;" header="Name" property="name" sortable></paper-datatable-column>
+      <paper-datatable-column style="max-width: 100px;" header="Rank" property="rank" sortable></paper-datatable-column>
+      <paper-datatable-column style="max-width: 100px;" header="Votes" property="votes" sortable></paper-datatable-column>
       <template is="dom-repeat" items="{{sortableTableColumns}}">
-        <paper-datatable-column header="{{item}}" property="{{item}}" sortable>
+        <paper-datatable-column  style="max-width: 100px;" header="{{item}}" property="{{item}}" sortable>
         </paper-datatable-column>
       </template>
-      <paper-datatable-column header="Total" property="total" sortable>
+      <paper-datatable-column style="min-width: 220px; text-align: center;" header="Total" property="total" sortable>
         <template>
           <template is="dom-if" if="{{!_hasPositiveTotal(value)}}">
             N/A
@@ -120,13 +123,21 @@
         },
 
         _questionsChanged: function () {
+          var rn = {
+            "Solution Elegance": "Elegance",
+            "Tool Power" : "Power"
+          }
           this.sortableTableQuestions = this.questions.map(function (q) {
             var entry = {};
             entry.name = q.data.stem;
             entry.rank = q.data.rank;
             entry.votes = parseInt(q.data.numVotes);
             q.data.ratingItems.forEach(function (rItem) {
-              entry[rItem.html] = rItem.rating;
+              var title = rItem.html.replace(/^\s*Mashup\s+/i, '');
+              if(rn.hasOwnProperty(title)){
+                title = rn[title];
+              }
+              entry[title] = rItem.rating;
             });
             entry.total = q.data.total;
             return entry;
@@ -136,7 +147,11 @@
           }
           // take the rating fields of the first question as rating fields Names
           var riColNames = this.questions[0].data.ratingItems.map(function (rItem) {
-            return rItem.html.replace(/^\s*Mashup\s+/i, '')
+            var title = rItem.html.replace(/^\s*Mashup\s+/i, '');
+            if(rn.hasOwnProperty(title)){
+              title = rn[title];
+            }
+            return title;
           });
           this.sortableTableColumns = riColNames;
         },
