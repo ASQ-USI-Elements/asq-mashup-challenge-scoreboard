@@ -21,9 +21,6 @@
   <style>
       :host{
         display: block;
-        --paper-datatable-cell:{
-          padding: 6px 4px;
-        };
       }
     </style>
   <template>
@@ -31,14 +28,14 @@
     <!-- (for now) Keep same when either viewer or presenter -->
 
     <paper-datatable id="scoreboard" data="[[sortableTableQuestions]]" multi-selection>
-      <paper-datatable-column style="max-width: 100px;" header="Name" property="name" sortable></paper-datatable-column>
-      <paper-datatable-column style="max-width: 100px;" header="Rank" property="rank" sortable></paper-datatable-column>
-      <paper-datatable-column style="max-width: 100px;" header="Votes" property="votes" sortable></paper-datatable-column>
+      <paper-datatable-column header="Name" property="name" sortable></paper-datatable-column>
+      <paper-datatable-column width="65px" align="center" header="Rank" property="rank" sortable></paper-datatable-column>
+      <paper-datatable-column width="65px" align="center" header="Votes" property="votes" sortable></paper-datatable-column>
       <template is="dom-repeat" items="{{sortableTableColumns}}">
-        <paper-datatable-column  style="max-width: 100px;" header="{{item}}" property="{{item}}" sortable>
+        <paper-datatable-column  width="95px" align="center" header="{{item}}" property="{{item}}" sortable>
         </paper-datatable-column>
       </template>
-      <paper-datatable-column style="min-width: 220px; text-align: center;" header="Total" property="total" sortable>
+      <paper-datatable-column header="Total" property="total" width="200px" sortable>
         <template>
           <template is="dom-if" if="{{!_hasPositiveTotal(value)}}">
             N/A
